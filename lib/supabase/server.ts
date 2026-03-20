@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { clientEnv, serverEnv } from "@/lib/supabase/env";
 
 export function createServerSupabaseClient() {
@@ -40,17 +41,8 @@ export function createServiceRoleClient() {
     return null;
   }
 
-  return createServerClient(
+  return createClient(
     clientEnv.NEXT_PUBLIC_SUPABASE_URL,
     serverEnv.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      cookies: {
-        get() {
-          return undefined;
-        },
-        set() {},
-        remove() {},
-      },
-    },
   );
 }

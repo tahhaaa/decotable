@@ -1,5 +1,6 @@
 import { cities, dashboardOrders, expensesSeed, productReviews, products, promotions, trafficSeries } from "@/lib/data/mock-data";
 import { categories } from "@/lib/data/mock-data";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { Category, City, Expense, Product, Promotion, Review } from "@/lib/types";
 
@@ -314,4 +315,34 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
     orders: dashboardOrders,
     traffic: trafficSeries,
   };
+}
+
+export async function getCustomerOrders() {
+  const sessionClient = createServerSupabaseClient();
+  if (!sessionClient) return [];
+
+  const {
+    data: { user },
+  } = await sessionClient.auth.getUser();
+
+  if (!user) return [];
+
+  const service = createServiceRoleClient();
+  if (!service) return [];
+
+  const { data } = await service
+    .from("orders")
+    .select("id,email,total,status,created_at,cities(name)")
+    .or(`user_id.eq.${user.id},email.eq.${user.email}`)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((order) => ({
+    id: order.id,
+    created_at: order.created_at,
+    status: order.status,
+    total: Number(order.total),
+    city: (order.cities as { name?: string } | null)?.name ?? "N/A",
+    user_email: order.email,
+    items_count: 0,
+  }));
 }

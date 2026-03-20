@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { PushOptIn } from "@/components/forms/push-optin";
-import { getDashboardSnapshot } from "@/lib/data/store";
+import { getCustomerOrders } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const snapshot = await getDashboardSnapshot();
+  const orders = await getCustomerOrders();
+  const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
 
   return (
     <div className="container-shell space-y-8 py-12">
@@ -17,12 +18,11 @@ export default async function DashboardPage() {
           Continuer mes achats
         </Link>
       </div>
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-3">
         {[
-          ["Depense totale", formatMAD(snapshot.revenue)],
-          ["Commandes", String(snapshot.monthlyOrders)],
-          ["Clients actifs", String(snapshot.customers)],
-          ["A preparer", String(snapshot.pendingOrders)],
+          ["Depense totale", formatMAD(totalSpent)],
+          ["Commandes", String(orders.length)],
+          ["En cours", String(orders.filter((order) => order.status !== "delivered").length)],
         ].map(([label, value]) => (
           <div key={label} className="surface p-6">
             <p className="text-sm text-stone">{label}</p>
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
             </tr>
           </thead>
           <tbody>
-            {snapshot.orders.map((order) => (
+            {orders.map((order) => (
               <tr key={order.id} className="border-t border-black/5">
                 <td className="px-6 py-4">{order.id}</td>
                 <td className="px-6 py-4">{order.city}</td>
@@ -49,6 +49,13 @@ export default async function DashboardPage() {
                 <td className="px-6 py-4">{formatMAD(order.total)}</td>
               </tr>
             ))}
+            {!orders.length ? (
+              <tr className="border-t border-black/5">
+                <td className="px-6 py-8 text-stone" colSpan={4}>
+                  Aucune commande trouvee pour votre compte.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
