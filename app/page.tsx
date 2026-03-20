@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, Truck } from "lucide-react";
 import { ProductCard } from "@/components/shop/product-card";
 import { Button } from "@/components/ui/button";
 import { getCategories, getFeaturedProducts } from "@/lib/data/store";
+import { getSafeImageSrc } from "@/lib/utils";
 
 export default async function HomePage() {
   const [featuredProducts, featuredCategories] = await Promise.all([
@@ -93,7 +94,7 @@ export default async function HomePage() {
           {featuredCategories.map((category) => (
             <Link key={category.id} href={`/shop?category=${category.id}`} className="surface group overflow-hidden">
               <div className="relative aspect-[4/5] overflow-hidden">
-                <Image src={category.image} alt={category.name} fill className="object-cover transition duration-700 group-hover:scale-105" />
+                <Image src={getSafeImageSrc(category.image)} alt={category.name} fill className="object-cover transition duration-700 group-hover:scale-105" />
               </div>
               <div className="space-y-3 p-6">
                 <p className="font-serif text-3xl">{category.name}</p>

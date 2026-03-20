@@ -26,3 +26,10 @@ export function absoluteUrl(path: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return new URL(path, base).toString();
 }
+
+export function getSafeImageSrc(src?: string | null, fallback = "/icons/icon-512.svg") {
+  if (!src) return fallback;
+  if (src.startsWith("/")) return src;
+  if (src.startsWith("http://") || src.startsWith("https://")) return src;
+  return fallback;
+}

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useStore } from "@/components/providers/store-provider";
 import { City, Product } from "@/lib/types";
-import { formatMAD } from "@/lib/utils";
+import { formatMAD, getSafeImageSrc } from "@/lib/utils";
 
 export function CartClient({ products, cities }: { products: Product[]; cities: City[] }) {
   const { cart, updateCartItem, removeFromCart } = useStore();
@@ -47,7 +47,7 @@ export function CartClient({ products, cities }: { products: Product[]; cities: 
         {items.map(({ cart: item, product }) => (
           <article key={product.id} className="surface flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
             <div className="relative h-28 w-full overflow-hidden rounded-[1.5rem] sm:w-28">
-              <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+              <Image src={getSafeImageSrc(product.images[0])} alt={product.name} fill className="object-cover" />
             </div>
             <div className="flex-1">
               <p className="font-serif text-2xl">{product.name}</p>

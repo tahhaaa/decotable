@@ -6,7 +6,7 @@ import { Heart, Star } from "lucide-react";
 import { useStore } from "@/components/providers/store-provider";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/types";
-import { formatMAD } from "@/lib/utils";
+import { formatMAD, getSafeImageSrc } from "@/lib/utils";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart, toggleWishlist, wishlist } = useStore();
@@ -16,7 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group surface overflow-hidden">
       <Link href={`/shop/${product.slug}`} className="relative block aspect-[4/5] overflow-hidden">
         <Image
-          src={product.images[0]}
+          src={getSafeImageSrc(product.images[0])}
           alt={product.name}
           fill
           sizes="(max-width: 768px) 100vw, 33vw"

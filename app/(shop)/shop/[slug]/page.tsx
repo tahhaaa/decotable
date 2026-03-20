@@ -2,7 +2,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ProductActions } from "@/components/shop/product-actions";
 import { getProductBySlug, getReviews } from "@/lib/data/store";
-import { formatMAD } from "@/lib/utils";
+import { formatMAD, getSafeImageSrc } from "@/lib/utils";
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const product = await getProductBySlug(params.slug);
@@ -16,7 +16,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="grid gap-6 sm:grid-cols-2">
           {item.images.map((image) => (
             <div key={image} className="surface relative aspect-[4/5] overflow-hidden">
-              <Image src={image} alt={item.name} fill className="object-cover" />
+              <Image src={getSafeImageSrc(image)} alt={item.name} fill className="object-cover" />
             </div>
           ))}
         </div>
