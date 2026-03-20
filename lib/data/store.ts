@@ -13,6 +13,15 @@ type FetchOptions = {
   fallbackToMock?: boolean;
 };
 
+type OrderRow = {
+  id: string;
+  email: string;
+  total: number;
+  status: "pending" | "confirmed" | "preparing" | "shipped" | "delivered" | "cancelled";
+  created_at: string;
+  city_id?: string | null;
+};
+
 function mapCategory(row: {
   id: string;
   name: string;
@@ -67,6 +76,28 @@ function mapProduct(row: {
     materials: row.materials ?? [],
     dimensions: row.dimensions ?? "",
   };
+}
+
+async function getCityNameMap() {
+  const supabase = createServiceRoleClient();
+  if (!supabase) return new Map<string, string>();
+
+  const { data } = await supabase.from("cities").select("id,name");
+  return new Map((data ?? []).map((city) => [city.id, city.name]));
+}
+
+async function mapOrdersWithCities(rows: OrderRow[]) {
+  const cityMap = await getCityNameMap();
+
+  return rows.map((order) => ({
+    id: order.id,
+    created_at: order.created_at,
+    status: order.status,
+    total: Number(order.total),
+    city: order.city_id ? cityMap.get(order.city_id) ?? "N/A" : "N/A",
+    user_email: order.email,
+    items_count: 0,
+  }));
 }
 
 export async function getCategories(options: FetchOptions = { fallbackToMock: true }): Promise<Category[]> {
@@ -205,7 +236,7 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}, option
   if (supabase) {
     let ordersQuery = supabase
       .from("orders")
-      .select("id,email,total,status,created_at,cities(name)")
+      .select("id,email,total,status,created_at,city_id")
       .order("created_at", { ascending: false });
 
     let viewsQuery = supabase.from("page_views").select("id,path,created_at").order("created_at", { ascending: false });
@@ -275,6 +306,8 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}, option
       });
     }
 
+    const mappedOrders = await mapOrdersWithCities((ordersData ?? []) as OrderRow[]);
+
     return {
       revenue,
       expenses,
@@ -288,15 +321,7 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}, option
       averageBasket,
       conversionRate,
       topProduct,
-      orders: (ordersData ?? []).map((order) => ({
-        id: order.id,
-        created_at: order.created_at,
-        status: order.status,
-        total: Number(order.total),
-        city: (order.cities as { name?: string } | null)?.name ?? "N/A",
-        user_email: order.email,
-        items_count: 0,
-      })),
+      orders: mappedOrders,
       traffic: Array.from(trafficMap.entries()).map(([day, value]) => ({ day, ...value })),
       source: "live" as const,
     };
@@ -368,17 +393,9 @@ export async function getCustomerOrders() {
 
   const { data } = await service
     .from("orders")
-    .select("id,email,total,status,created_at,cities(name)")
+    .select("id,email,total,status,created_at,city_id")
     .or(`user_id.eq.${user.id},email.eq.${user.email}`)
     .order("created_at", { ascending: false });
 
-  return (data ?? []).map((order) => ({
-    id: order.id,
-    created_at: order.created_at,
-    status: order.status,
-    total: Number(order.total),
-    city: (order.cities as { name?: string } | null)?.name ?? "N/A",
-    user_email: order.email,
-    items_count: 0,
-  }));
+  return mapOrdersWithCities((data ?? []) as OrderRow[]);
 }
