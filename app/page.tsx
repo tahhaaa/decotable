@@ -1,16 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2, Truck } from "lucide-react";
 import { ProductCard } from "@/components/shop/product-card";
 import { Button } from "@/components/ui/button";
 import { getCategories, getFeaturedProducts } from "@/lib/data/store";
+import { getCurrentUserRole } from "@/lib/supabase/auth";
 import { getSafeImageSrc } from "@/lib/utils";
 
 export default async function HomePage() {
-  const [featuredProducts, featuredCategories] = await Promise.all([
+  const [access, featuredProducts, featuredCategories] = await Promise.all([
+    getCurrentUserRole(),
     getFeaturedProducts(),
     getCategories(),
   ]);
+
+  if (access.role === "admin") {
+    redirect("/admin");
+  }
 
   return (
     <div className="bg-grain">
