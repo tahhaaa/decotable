@@ -19,12 +19,13 @@ export default function AppleIcon() {
           justifyContent: "center",
           background: "#F8F4EE",
           color: "#000000",
-          fontSize: 96,
+          fontSize: 78,
           borderRadius: 40,
           border: "2px solid rgba(0,0,0,0.12)",
+          fontFamily: "Georgia, serif",
         }}
       >
-        D
+        DT
       </div>
     ),
     size,

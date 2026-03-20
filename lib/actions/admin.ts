@@ -70,6 +70,19 @@ export async function updateOrderStatusAction(formData: FormData): Promise<void>
   if (error) return;
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+
+  const { data: subscriptions } = await supabase.from("push_subscriptions").select("subscription");
+  if (subscriptions?.length) {
+    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/push/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Commande mise a jour",
+        body: `La commande ${id} est maintenant ${status}.`,
+        url: "/admin/orders",
+      }),
+    }).catch(() => undefined);
+  }
 }
 
 export async function updateCityAction(formData: FormData): Promise<void> {
@@ -139,4 +152,30 @@ export async function deletePromotionAction(formData: FormData): Promise<void> {
   if (error) return;
   revalidatePath("/admin/promotions");
   revalidatePath("/checkout");
+}
+
+export async function deleteOrderAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  await supabase.from("order_items").delete().eq("order_id", id);
+  const { error } = await supabase.from("orders").delete().eq("id", id);
+  if (error) return;
+  revalidatePath("/admin/orders");
+  revalidatePath("/dashboard");
+}
+
+export async function resetSiteDataAction(): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  await supabase.from("order_items").delete().neq("id", "");
+  await supabase.from("orders").delete().neq("id", "");
+  await supabase.from("reviews").delete().neq("id", "");
+  await supabase.from("wishlist").delete().neq("id", "");
+  await supabase.from("carts").delete().neq("user_id", "");
+  await supabase.from("page_views").delete().neq("id", "");
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
 }

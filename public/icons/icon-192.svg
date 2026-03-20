@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
   <rect width="192" height="192" rx="48" fill="#F8F4EE"/>
   <rect x="12" y="12" width="168" height="168" rx="40" fill="none" stroke="#000" stroke-opacity=".08"/>
-  <text x="96" y="114" text-anchor="middle" font-size="90" font-family="Georgia, serif" fill="#000">D</text>
+  <text x="96" y="114" text-anchor="middle" font-size="62" font-family="Georgia, serif" fill="#000">DT</text>
 </svg>

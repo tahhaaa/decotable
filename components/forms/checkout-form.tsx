@@ -40,7 +40,19 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
       <form
         onSubmit={form.handleSubmit(async (values) => {
-          const payload = { ...values, cart };
+          const payload = {
+            ...values,
+            cart: cart.map((item) => {
+              const product = products.find((entry) => entry.id === item.productId);
+              return {
+                productId: item.productId,
+                productName: product?.name ?? item.productId,
+                quantity: item.quantity,
+                unitPrice: product?.price ?? 0,
+              };
+            }),
+            subtotal,
+          };
           await fetch("/api/email/order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

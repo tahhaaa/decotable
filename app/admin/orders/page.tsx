@@ -1,6 +1,6 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
-import { updateOrderStatusAction } from "@/lib/actions/admin";
+import { deleteOrderAction, updateOrderStatusAction } from "@/lib/actions/admin";
 import { getDashboardSnapshot } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
@@ -16,7 +16,8 @@ export default async function AdminOrdersPage() {
         </div>
         <div className="grid gap-4">
           {snapshot.orders.map((order) => (
-            <form key={order.id} action={updateOrderStatusAction} className="surface grid gap-4 p-6 md:grid-cols-[1.2fr_1fr_180px_160px] md:items-center">
+            <div key={order.id} className="surface grid gap-4 p-6 md:grid-cols-[1.2fr_1fr_180px_160px_140px] md:items-center">
+              <form action={updateOrderStatusAction} className="contents">
               <input type="hidden" name="id" value={order.id} />
               <div>
                 <p className="font-medium">{order.id}</p>
@@ -33,7 +34,14 @@ export default async function AdminOrdersPage() {
                 ))}
               </select>
               <Button type="submit">Enregistrer</Button>
-            </form>
+              </form>
+              <form action={deleteOrderAction}>
+                <input type="hidden" name="id" value={order.id} />
+                <Button type="submit" variant="ghost">
+                  Supprimer
+                </Button>
+              </form>
+            </div>
           ))}
         </div>
       </div>

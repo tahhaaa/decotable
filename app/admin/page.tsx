@@ -1,5 +1,8 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AnalyticsCards } from "@/components/admin/analytics-cards";
+import { PushOptIn } from "@/components/forms/push-optin";
+import { Button } from "@/components/ui/button";
+import { resetSiteDataAction } from "@/lib/actions/admin";
 import { getCategories, getCities, getDashboardSnapshot, getFeaturedProducts, getPromotions } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
@@ -20,6 +23,14 @@ export default async function AdminPage() {
         <p className="section-copy">
           Revenus, trafic, stock, promotions et commandes dans un panneau simple a naviguer sur mobile et desktop.
         </p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+        <PushOptIn />
+        <form action={resetSiteDataAction}>
+          <Button type="submit" variant="ghost" className="w-full lg:w-auto">
+            Reinitialiser les donnees du site
+          </Button>
+        </form>
       </div>
       <AnalyticsCards
         revenue={snapshot.revenue}

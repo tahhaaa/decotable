@@ -12,6 +12,9 @@ html {
 
 body {
   @apply bg-cream text-ink antialiased;
+  background-image:
+    radial-gradient(circle at top, rgba(196, 164, 132, 0.18), transparent 24%),
+    linear-gradient(180deg, rgba(248,244,238,1) 0%, rgba(255,255,255,1) 100%);
 }
 
 .container-shell {
@@ -19,7 +22,7 @@ body {
 }
 
 .surface {
-  @apply rounded-[2rem] border border-black/5 bg-white/90 shadow-luxe backdrop-blur;
+  @apply rounded-[2rem] border border-black/5 bg-white/90 shadow-luxe backdrop-blur transition-all duration-500 hover:shadow-[0_28px_90px_rgba(0,0,0,0.12)];
 }
 
 .section-title {
@@ -28,4 +31,40 @@ body {
 
 .section-copy {
   @apply max-w-2xl text-sm leading-7 text-stone sm:text-base;
+}
+
+.fade-up {
+  animation: fadeUp 0.8s ease both;
+}
+
+.link-luxe {
+  position: relative;
+}
+
+.link-luxe::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.35rem;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.5);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+
+.link-luxe:hover::after {
+  transform: scaleX(1);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

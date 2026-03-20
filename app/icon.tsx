@@ -19,12 +19,13 @@ export default function Icon() {
           justifyContent: "center",
           background: "#F8F4EE",
           color: "#000000",
-          fontSize: 22,
+          fontSize: 20,
           borderRadius: 9999,
           border: "1px solid rgba(0,0,0,0.12)",
+          fontFamily: "Georgia, serif",
         }}
       >
-        D
+        DT
       </div>
     ),
     size,
