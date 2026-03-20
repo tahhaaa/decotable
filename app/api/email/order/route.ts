@@ -5,11 +5,39 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function shouldTryFallback(message?: string | null) {
+  if (!message) return false;
+
+  return (
+    message.includes("Invalid API key") ||
+    message.includes("JWT") ||
+    message.includes("No API key found") ||
+    message.includes("not authenticated")
+  );
+}
+
+type CartItemPayload = {
+  productId: string;
+  productName?: string;
+  quantity: number;
+  unitPrice?: number;
+};
+
+type CityRow = {
+  id: string;
+  price: number;
+  estimated_time: string;
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const supabase = createServiceRoleClient();
     const sessionClient = createServerSupabaseClient();
+    const serviceClient = createServiceRoleClient();
+    const clients = [serviceClient, sessionClient].filter(
+      (client): client is NonNullable<typeof serviceClient> | NonNullable<typeof sessionClient> => Boolean(client),
+    );
+
     const {
       data: { user },
     } = sessionClient ? await sessionClient.auth.getUser() : { data: { user: null } };
@@ -18,68 +46,83 @@ export async function POST(request: Request) {
     let shipping = 0;
     let eta = "24-48h";
     let warning: string | null = null;
+    let lastError = "Configuration Supabase incomplete pour la commande.";
 
-    if (!supabase) {
-      return NextResponse.json({ ok: false, message: "Supabase service role indisponible." }, { status: 500 });
+    if (!body.city) {
+      return NextResponse.json({ ok: false, message: "Choisissez une ville de livraison." }, { status: 400 });
     }
 
-    if (body.city) {
-      const { data: city, error: cityError } = await supabase
+    if (!clients.length) {
+      return NextResponse.json({ ok: false, message: lastError }, { status: 500 });
+    }
+
+    for (const client of clients) {
+      const { data: city, error: cityError } = await client
         .from("cities")
         .select("id,price,estimated_time")
         .eq("name", body.city)
-        .maybeSingle();
+        .maybeSingle<CityRow>();
 
       if (cityError) {
-        return NextResponse.json({ ok: false, message: `Erreur ville: ${cityError.message}` }, { status: 400 });
+        lastError = `Erreur ville: ${cityError.message}`;
+        if (shouldTryFallback(cityError.message) && client !== sessionClient) continue;
+        return NextResponse.json({ ok: false, message: lastError }, { status: 400 });
       }
 
-      const cart = Array.isArray(body.cart) ? body.cart : [];
-      const subtotal = Number(body.subtotal || 0);
-      shipping = Number(city?.price || 0);
-      eta = String(city?.estimated_time || "24-48h");
+      if (!city) {
+        return NextResponse.json({ ok: false, message: "Ville introuvable dans la base de livraison." }, { status: 400 });
+      }
 
-      const { data: order, error: orderError } = await supabase
+      const cart = Array.isArray(body.cart) ? (body.cart as CartItemPayload[]) : [];
+      const subtotal = Number(body.subtotal || 0);
+      shipping = Number(city.price || 0);
+      eta = String(city.estimated_time || "24-48h");
+
+      const { data: order, error: orderError } = await client
         .from("orders")
         .insert({
           user_id: user?.id ?? null,
-          email: body.email,
-          phone: body.phone,
-          city_id: city?.id ?? null,
-          address: body.address,
+          email: String(body.email || ""),
+          phone: String(body.phone || ""),
+          city_id: city.id,
+          address: String(body.address || ""),
           subtotal,
           shipping,
           total: subtotal + shipping,
           status: "pending",
         })
         .select("id")
-        .single();
+        .single<{ id: string }>();
 
       if (orderError) {
-        return NextResponse.json({ ok: false, message: `Erreur commande: ${orderError.message}` }, { status: 400 });
+        lastError = `Erreur commande: ${orderError.message}`;
+        if (shouldTryFallback(orderError.message) && client !== sessionClient) continue;
+        return NextResponse.json({ ok: false, message: lastError }, { status: 400 });
       }
 
       createdOrderId = order?.id ?? null;
 
-      if (!orderError && order?.id && cart.length) {
-        const itemsPayload = cart.map(
-          (item: { productId: string; productName?: string; quantity: number; unitPrice?: number }) => ({
-            order_id: order.id,
-            product_id: isUuid(item.productId) ? item.productId : null,
-            product_name: item.productName || item.productId,
-            quantity: item.quantity,
-            unit_price: Number(item.unitPrice || 0),
-          }),
-        );
+      if (order?.id && cart.length) {
+        const itemsPayload = cart.map((item) => ({
+          order_id: order.id,
+          product_id: isUuid(item.productId) ? item.productId : null,
+          product_name: item.productName || item.productId,
+          quantity: Number(item.quantity || 0),
+          unit_price: Number(item.unitPrice || 0),
+        }));
 
-        const { error: itemsError } = await supabase.from("order_items").insert(itemsPayload);
+        const { error: itemsError } = await client.from("order_items").insert(itemsPayload);
         if (itemsError) {
-          return NextResponse.json(
-            { ok: false, message: `Erreur lignes commande: ${itemsError.message}` },
-            { status: 400 },
-          );
+          warning =
+            "Commande creee, mais les lignes produit n'ont pas pu etre enregistrees. Appliquez la migration finale Supabase.";
         }
       }
+
+      break;
+    }
+
+    if (!createdOrderId) {
+      return NextResponse.json({ ok: false, message: lastError }, { status: 500 });
     }
 
     await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/push/send`, {
