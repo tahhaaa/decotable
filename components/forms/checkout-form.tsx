@@ -47,6 +47,62 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
     { label: "Expedition", icon: Truck },
   ];
 
+  if (submitted) {
+    return (
+      <div className="surface mx-auto max-w-4xl space-y-8 p-8 md:p-10 fade-up">
+        <div className="rounded-[1.75rem] border border-beige/40 bg-beige/10 p-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-beige text-white shadow-lg">
+            <CheckCircle2 className="h-8 w-8" />
+          </div>
+          <p className="mt-4 font-serif text-3xl">Commande envoyee</p>
+          <p className="mt-2 text-sm leading-7 text-stone">
+            Votre commande a bien ete recue par Decotable.
+          </p>
+          {submitted.orderId ? (
+            <p className="mt-3 text-sm font-medium text-ink">Reference: {submitted.orderId}</p>
+          ) : null}
+          <p className="mt-2 text-sm text-stone">Livraison estimee: {submitted.eta}</p>
+          {submitted.warning ? (
+            <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              {submitted.warning}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {trackingSteps.map((step, index) => {
+            const Icon = step.icon;
+            const active = index === 0;
+            return (
+              <div key={step.label} className="rounded-[1.5rem] border border-black/8 bg-white p-5">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-full ${active ? "bg-ink text-white" : "bg-black/5 text-stone"}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className={`font-medium ${active ? "text-ink" : "text-stone"}`}>{step.label}</p>
+                    <p className="text-sm text-stone">
+                      {active ? "Etape active maintenant." : "Cette etape arrivera ensuite."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link href="/dashboard" className="flex-1">
+            <Button className="w-full">Voir le suivi dans mon espace</Button>
+          </Link>
+          <Link href="/shop" className="flex-1">
+            <Button variant="ghost" className="w-full">Continuer mes achats</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
       <form
@@ -123,83 +179,33 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </form>
       <aside className="surface space-y-5 p-6">
-        {submitted ? (
-          <div className="space-y-6">
-            <div className="rounded-[1.75rem] border border-beige/40 bg-beige/10 p-6 text-center fade-up">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-beige text-white shadow-lg">
-                <CheckCircle2 className="h-8 w-8" />
+        <p className="font-serif text-2xl">Votre commande</p>
+        <div className="space-y-3 text-sm text-stone">
+          {cart.map((item) => {
+            const product = products.find((entry) => entry.id === item.productId);
+            if (!product) return null;
+            return (
+              <div key={product.id} className="flex justify-between">
+                <span>
+                  {product.name} x {item.quantity}
+                </span>
+                <span>{formatMAD(product.price * item.quantity)}</span>
               </div>
-              <p className="mt-4 font-serif text-3xl">Commande envoyee</p>
-              <p className="mt-2 text-sm leading-7 text-stone">
-                Votre commande a bien ete recue par Decotable.
-              </p>
-              {submitted.orderId ? (
-                <p className="mt-3 text-sm font-medium text-ink">Reference: {submitted.orderId}</p>
-              ) : null}
-              <p className="mt-2 text-sm text-stone">Livraison estimee: {submitted.eta}</p>
-              {submitted.warning ? (
-                <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  {submitted.warning}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-4">
-              <p className="font-serif text-2xl">Suivi de commande</p>
-              {trackingSteps.map((step, index) => {
-                const Icon = step.icon;
-                const active = index === 0;
-                return (
-                  <div key={step.label} className="flex items-center gap-4">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${active ? "bg-ink text-white" : "bg-black/5 text-stone"}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className={`font-medium ${active ? "text-ink" : "text-stone"}`}>{step.label}</p>
-                      <p className="text-sm text-stone">
-                        {active ? "Etape active maintenant." : "Cette etape arrivera ensuite."}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <Link href="/dashboard">
-              <Button className="w-full">Voir le suivi dans mon espace</Button>
-            </Link>
+            );
+          })}
+          <div className="flex justify-between border-t border-black/10 pt-3">
+            <span>Sous-total</span>
+            <span>{formatMAD(subtotal)}</span>
           </div>
-        ) : (
-          <>
-            <p className="font-serif text-2xl">Votre commande</p>
-            <div className="space-y-3 text-sm text-stone">
-              {cart.map((item) => {
-                const product = products.find((entry) => entry.id === item.productId);
-                if (!product) return null;
-                return (
-                  <div key={product.id} className="flex justify-between">
-                    <span>
-                      {product.name} x {item.quantity}
-                    </span>
-                    <span>{formatMAD(product.price * item.quantity)}</span>
-                  </div>
-                );
-              })}
-              <div className="flex justify-between border-t border-black/10 pt-3">
-                <span>Sous-total</span>
-                <span>{formatMAD(subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Livraison</span>
-                <span>{selectedCity ? formatMAD(selectedCity.price) : "--"}</span>
-              </div>
-              <div className="flex justify-between text-base font-semibold text-ink">
-                <span>Total</span>
-                <span>{formatMAD(total)}</span>
-              </div>
-            </div>
-          </>
-        )}
+          <div className="flex justify-between">
+            <span>Livraison</span>
+            <span>{selectedCity ? formatMAD(selectedCity.price) : "--"}</span>
+          </div>
+          <div className="flex justify-between text-base font-semibold text-ink">
+            <span>Total</span>
+            <span>{formatMAD(total)}</span>
+          </div>
+        </div>
       </aside>
     </div>
   );
