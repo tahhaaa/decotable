@@ -2,14 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/supabase/auth";
 import { slugify } from "@/lib/utils";
 
 async function getAdminClient() {
   const supabase = createServiceRoleClient();
-  if (!supabase) {
-    return null;
+  if (supabase) return supabase;
+
+  const access = await getCurrentUserRole();
+  if (access.role === "admin") {
+    return createServerSupabaseClient();
   }
-  return supabase;
+
+  return null;
 }
 
 export async function upsertCategoryAction(formData: FormData): Promise<void> {

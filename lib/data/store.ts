@@ -2,6 +2,7 @@ import { cities, dashboardOrders, expensesSeed, productReviews, products, promot
 import { categories } from "@/lib/data/mock-data";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getCurrentUserRole } from "@/lib/supabase/auth";
 import { Category, City, Expense, Product, Promotion, Review } from "@/lib/types";
 
 type SnapshotFilters = {
@@ -79,7 +80,7 @@ function mapProduct(row: {
 }
 
 async function getCityNameMap() {
-  const supabase = createServiceRoleClient();
+  const supabase = createServiceRoleClient() ?? createServerSupabaseClient();
   if (!supabase) return new Map<string, string>();
 
   const { data } = await supabase.from("cities").select("id,name");
@@ -100,8 +101,20 @@ async function mapOrdersWithCities(rows: OrderRow[]) {
   }));
 }
 
+async function getAdminAwareClient() {
+  const service = createServiceRoleClient();
+  if (service) return service;
+
+  const access = await getCurrentUserRole();
+  if (access.role === "admin") {
+    return createServerSupabaseClient();
+  }
+
+  return null;
+}
+
 export async function getCategories(options: FetchOptions = { fallbackToMock: true }): Promise<Category[]> {
-  const supabase = createServiceRoleClient();
+  const supabase = await getAdminAwareClient();
   if (supabase) {
     const { data } = await supabase.from("categories").select("id,name,slug,description,image_url").order("created_at", { ascending: false });
     if (data) return data.map(mapCategory);
@@ -118,7 +131,7 @@ export async function getProducts(query?: {
   search?: string;
   category?: string;
 }, options: FetchOptions = { fallbackToMock: true }): Promise<Product[]> {
-  const supabase = createServiceRoleClient();
+  const supabase = await getAdminAwareClient();
   if (supabase) {
     let request = supabase
       .from("products")
@@ -144,7 +157,7 @@ export async function getProducts(query?: {
 }
 
 export async function getProductBySlug(slug: string) {
-  const supabase = createServiceRoleClient();
+  const supabase = createServiceRoleClient() ?? createServerSupabaseClient();
   if (supabase) {
     const { data } = await supabase
       .from("products")
@@ -157,7 +170,7 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getCities(options: FetchOptions = { fallbackToMock: true }): Promise<City[]> {
-  const supabase = createServiceRoleClient();
+  const supabase = createServiceRoleClient() ?? createServerSupabaseClient();
   if (supabase) {
     const { data } = await supabase.from("cities").select("id,name,price,estimated_time").order("name");
     if (data && data.length > 0) {
@@ -173,7 +186,7 @@ export async function getCities(options: FetchOptions = { fallbackToMock: true }
 }
 
 export async function getPromotions(options: FetchOptions = { fallbackToMock: true }): Promise<Promotion[]> {
-  const supabase = createServiceRoleClient();
+  const supabase = await getAdminAwareClient();
   if (supabase) {
     const { data } = await supabase.from("promotions").select("id,code,label,type,value,active").order("created_at", { ascending: false });
     if (data) {
@@ -191,7 +204,7 @@ export async function getPromotions(options: FetchOptions = { fallbackToMock: tr
 }
 
 export async function getExpenses(filters: SnapshotFilters = {}, options: FetchOptions = { fallbackToMock: true }): Promise<Expense[]> {
-  const supabase = createServiceRoleClient();
+  const supabase = await getAdminAwareClient();
   if (supabase) {
     let query = supabase.from("expenses").select("id,label,amount,expense_date,notes").order("expense_date", { ascending: false });
     if (filters.dateFrom) query = query.gte("expense_date", filters.dateFrom);
@@ -211,7 +224,7 @@ export async function getExpenses(filters: SnapshotFilters = {}, options: FetchO
 }
 
 export async function getReviews(productId: string): Promise<Review[]> {
-  const supabase = createServiceRoleClient();
+  const supabase = createServiceRoleClient() ?? createServerSupabaseClient();
   if (supabase) {
     const { data } = await supabase
       .from("reviews")
@@ -232,7 +245,7 @@ export async function getReviews(productId: string): Promise<Review[]> {
 }
 
 export async function getDashboardSnapshot(filters: SnapshotFilters = {}, options: FetchOptions = { fallbackToMock: true }) {
-  const supabase = createServiceRoleClient();
+  const supabase = await getAdminAwareClient();
   if (supabase) {
     let ordersQuery = supabase
       .from("orders")
@@ -388,13 +401,10 @@ export async function getCustomerOrders() {
 
   if (!user) return [];
 
-  const service = createServiceRoleClient();
-  if (!service) return [];
-
-  const { data } = await service
+  const { data } = await sessionClient
     .from("orders")
     .select("id,email,total,status,created_at,city_id")
-    .or(`user_id.eq.${user.id},email.eq.${user.email}`)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   return mapOrdersWithCities((data ?? []) as OrderRow[]);
