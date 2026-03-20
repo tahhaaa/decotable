@@ -89,7 +89,7 @@ export function PushOptIn() {
 
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!publicKey) {
-      setMessage("Ajoutez votre cle publique VAPID sur Vercel pour activer les notifications.");
+      setMessage("Ajoutez NEXT_PUBLIC_VAPID_PUBLIC_KEY sur Vercel pour activer les notifications.");
       return;
     }
 

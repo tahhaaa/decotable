@@ -74,6 +74,7 @@ export type Order = {
   total: number;
   city: string;
   user_email: string;
+  phone?: string | null;
   items_count: number;
 };
 

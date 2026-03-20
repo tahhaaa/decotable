@@ -2,7 +2,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { deleteOrderAction, updateOrderStatusAction } from "@/lib/actions/admin";
 import { getDashboardSnapshot } from "@/lib/data/store";
-import { formatMAD } from "@/lib/utils";
+import { formatMAD, toWhatsAppLink } from "@/lib/utils";
 
 export default async function AdminOrdersPage() {
   const snapshot = await getDashboardSnapshot({}, { fallbackToMock: false });
@@ -16,7 +16,7 @@ export default async function AdminOrdersPage() {
         </div>
         <div className="grid gap-4">
           {snapshot.orders.map((order) => (
-            <div key={order.id} className="surface grid gap-4 p-6 md:grid-cols-[1.2fr_1fr_180px_160px_140px] md:items-center">
+            <div key={order.id} className="surface grid gap-4 p-6 md:grid-cols-[1.2fr_1fr_180px_160px_160px_140px] md:items-center">
               <form action={updateOrderStatusAction} className="contents">
               <input type="hidden" name="id" value={order.id} />
               <div>
@@ -24,6 +24,7 @@ export default async function AdminOrdersPage() {
                 <p className="text-sm text-stone">
                   {order.user_email} · {order.city}
                 </p>
+                {order.phone ? <p className="text-sm text-stone">{order.phone}</p> : null}
               </div>
               <p>{formatMAD(order.total)}</p>
               <select name="status" defaultValue={order.status} className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm">
@@ -35,6 +36,24 @@ export default async function AdminOrdersPage() {
               </select>
               <Button type="submit">Enregistrer</Button>
               </form>
+              {toWhatsAppLink(
+                order.phone,
+                `Bonjour, votre commande Decotable ${order.id} est bien recuee. Nous confirmons sa prise en charge.`,
+              ) ? (
+                <a
+                  href={toWhatsAppLink(
+                    order.phone,
+                    `Bonjour, votre commande Decotable ${order.id} est bien recuee. Nous confirmons sa prise en charge.`,
+                  ) || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-medium transition hover:bg-black hover:text-white"
+                >
+                  WhatsApp
+                </a>
+              ) : (
+                <p className="text-sm text-stone">Sans numero</p>
+              )}
               <form action={deleteOrderAction}>
                 <input type="hidden" name="id" value={order.id} />
                 <Button type="submit" variant="ghost">

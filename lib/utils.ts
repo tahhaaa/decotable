@@ -33,3 +33,17 @@ export function getSafeImageSrc(src?: string | null, fallback = "/icons/icon-512
   if (src.startsWith("http://") || src.startsWith("https://")) return src;
   return fallback;
 }
+
+export function toWhatsAppLink(phone?: string | null, text?: string) {
+  if (!phone) return null;
+
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+
+  let normalized = digits;
+  if (digits.startsWith("0")) normalized = `212${digits.slice(1)}`;
+  if (digits.startsWith("212")) normalized = digits;
+
+  const message = text ? `?text=${encodeURIComponent(text)}` : "";
+  return `https://wa.me/${normalized}${message}`;
+}

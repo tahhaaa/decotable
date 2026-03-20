@@ -13,7 +13,6 @@ import { formatMAD } from "@/lib/utils";
 
 type CheckoutValues = {
   fullName: string;
-  email: string;
   phone: string;
   address: string;
   city: string;
@@ -157,8 +156,6 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
       >
         <Input placeholder="Nom complet" {...form.register("fullName", { required: true })} />
         {form.formState.errors.fullName ? <p className="text-sm text-red-600">Le nom complet est obligatoire.</p> : null}
-        <Input type="email" placeholder="Adresse email" {...form.register("email", { required: true })} />
-        {form.formState.errors.email ? <p className="text-sm text-red-600">L&apos;email est obligatoire.</p> : null}
         <Input placeholder="Telephone" {...form.register("phone", { required: true })} />
         {form.formState.errors.phone ? <p className="text-sm text-red-600">Le telephone est obligatoire.</p> : null}
         <Input placeholder="Adresse de livraison" {...form.register("address", { required: true })} />

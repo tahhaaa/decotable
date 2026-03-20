@@ -16,7 +16,8 @@ type FetchOptions = {
 
 type OrderRow = {
   id: string;
-  email: string;
+  email?: string | null;
+  phone?: string | null;
   total: number;
   status: "pending" | "confirmed" | "preparing" | "shipped" | "delivered" | "cancelled";
   created_at: string;
@@ -96,7 +97,8 @@ async function mapOrdersWithCities(rows: OrderRow[]) {
     status: order.status,
     total: Number(order.total),
     city: order.city_id ? cityMap.get(order.city_id) ?? "N/A" : "N/A",
-    user_email: order.email,
+    user_email: order.email || order.phone || "Sans email",
+    phone: order.phone ?? null,
     items_count: 0,
   }));
 }
@@ -246,7 +248,7 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}, option
   if (supabase) {
     let ordersQuery = supabase
       .from("orders")
-      .select("id,email,total,status,created_at,city_id")
+      .select("id,email,phone,total,status,created_at,city_id")
       .order("created_at", { ascending: false });
 
     let viewsQuery = supabase.from("page_views").select("id,path,created_at").order("created_at", { ascending: false });
@@ -382,7 +384,7 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}, option
     averageBasket: 890,
     conversionRate: 5.7,
     topProduct: topProduct?.name ?? "Service Atlas 16 pieces",
-    orders: dashboardOrders,
+    orders: dashboardOrders.map((order) => ({ ...order, phone: null })),
     traffic: trafficSeries,
     source: "mock" as const,
   };
@@ -400,7 +402,7 @@ export async function getCustomerOrders() {
 
   const { data } = await sessionClient
     .from("orders")
-    .select("id,email,total,status,created_at,city_id")
+    .select("id,email,phone,total,status,created_at,city_id")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 

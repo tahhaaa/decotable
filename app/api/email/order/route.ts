@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         .from("orders")
         .insert({
           user_id: user?.id ?? null,
-          email: String(body.email || ""),
+          email: body.email ? String(body.email) : null,
           phone: String(body.phone || ""),
           city_id: city.id,
           address: String(body.address || ""),
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         title: "Nouvelle commande Decotable",
-        body: `${body.fullName || body.email} vient de passer une commande.`,
+        body: `${body.fullName || body.phone} vient de passer une commande.`,
         url: "/admin/orders",
       }),
     }).catch(() => undefined);
