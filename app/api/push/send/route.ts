@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import webpush from "web-push";
-import { createServiceRoleClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { clientEnv, serverEnv } from "@/lib/supabase/env";
+import { getCurrentUserRole } from "@/lib/supabase/auth";
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const supabase = createServiceRoleClient();
+  const sessionClient = createServerSupabaseClient();
+  const access = await getCurrentUserRole();
+  const supabase = access.role === "admin" ? sessionClient ?? createServiceRoleClient() : createServiceRoleClient();
 
   if (
     !supabase ||

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type PushSupportState = {
@@ -26,7 +27,7 @@ function detectPushSupport(): PushSupportState {
   if (!window.isSecureContext) {
     return {
       supported: false,
-      message: "Les notifications push exigent HTTPS. Sur telephone, ouvrez le site securise puis installez-le si besoin.",
+      message: "Les notifications push exigent HTTPS. Ouvrez le site securise puis installez-le si besoin.",
     };
   }
 
@@ -54,7 +55,7 @@ function detectPushSupport(): PushSupportState {
   if (Notification.permission === "denied") {
     return {
       supported: false,
-      message: "Les notifications sont bloquees dans le navigateur. Reautorisez-les dans les reglages puis rechargez la page.",
+      message: "Les notifications sont bloquees. Reautorisez-les dans les reglages puis rechargez la page.",
     };
   }
 
@@ -64,9 +65,19 @@ function detectPushSupport(): PushSupportState {
   };
 }
 
+async function readJsonSafely(response: Response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 export function PushOptIn() {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isActivated, setIsActivated] = useState(false);
   const [support, setSupport] = useState<PushSupportState>({
     supported: false,
     message: "Verification du navigateur en cours.",
@@ -117,12 +128,14 @@ export function PushOptIn() {
         body: JSON.stringify(subscription),
       });
 
+      const result = await readJsonSafely(response);
       if (!response.ok) {
-        setMessage("Abonnement enregistre localement, mais l'API push a refuse la sauvegarde. Verifiez Vercel et Supabase.");
+        setMessage(result?.message || "L'abonnement push n'a pas pu etre enregistre.");
         return;
       }
 
-      setMessage("Notifications activees avec succes.");
+      setIsActivated(true);
+      setMessage("Notifications activees avec succes. Vous pouvez maintenant envoyer un test.");
     } catch {
       setMessage("Impossible d'activer les notifications sur ce navigateur pour l'instant.");
     } finally {
@@ -130,17 +143,54 @@ export function PushOptIn() {
     }
   }
 
+  async function sendTest() {
+    try {
+      setIsTesting(true);
+      const response = await fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Test notification Decotable",
+          body: "Votre configuration push fonctionne correctement.",
+          url: "/admin",
+        }),
+      });
+      const result = await readJsonSafely(response);
+      if (!response.ok) {
+        setMessage(result?.message || "Le test push a echoue.");
+        return;
+      }
+      setMessage("Notification de test envoyee.");
+    } catch {
+      setMessage("Impossible d'envoyer la notification de test.");
+    } finally {
+      setIsTesting(false);
+    }
+  }
+
   return (
-    <div className="surface flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="font-medium">Recevoir les notifications Decotable</p>
-        <p className="text-sm text-stone">Nouvelles commandes, changements de statut et promotions en temps reel.</p>
-      </div>
-      <div className="flex flex-col items-start gap-2">
-        <Button onClick={subscribe} disabled={isSubmitting}>
-          {isSubmitting ? "Activation..." : "Activer"}
-        </Button>
-        <p className="max-w-md text-sm text-stone">{helperMessage}</p>
+    <div className="surface fade-soft flex flex-col gap-4 p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-beige/15 text-ink">
+              <BellRing className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-medium">Recevoir les notifications Decotable</p>
+              <p className="text-sm text-stone">Nouvelles commandes, changements de statut et promotions en temps reel.</p>
+            </div>
+          </div>
+          <p className="max-w-xl text-sm text-stone">{helperMessage}</p>
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[220px]">
+          <Button onClick={subscribe} disabled={isSubmitting}>
+            {isSubmitting ? "Activation..." : isActivated ? "Reconfigurer" : "Activer"}
+          </Button>
+          <Button onClick={sendTest} variant="ghost" disabled={!support.supported || isTesting}>
+            {isTesting ? "Envoi..." : "Envoyer un test"}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -22,13 +22,13 @@ export function AnalyticsCards({
   conversionRate: number;
   traffic: TrafficPoint[];
 }) {
-  const maxVisits = Math.max(...traffic.map((point) => point.visits));
-  const maxOrders = Math.max(...traffic.map((point) => point.orders));
-  const maxRevenue = Math.max(...traffic.map((point) => point.revenue));
+  const maxVisits = Math.max(...traffic.map((point) => point.visits), 1);
+  const maxOrders = Math.max(...traffic.map((point) => point.orders), 1);
+  const maxRevenue = Math.max(...traffic.map((point) => point.revenue), 1);
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["Revenu", formatMAD(revenue)],
           ["Charges", formatMAD(expenses)],
@@ -40,7 +40,7 @@ export function AnalyticsCards({
         ].map(([label, value]) => (
           <div key={label} className="surface p-6">
             <p className="text-sm text-stone">{label}</p>
-            <p className="mt-3 font-serif text-4xl">{value}</p>
+            <p className="mt-3 font-serif text-3xl sm:text-4xl">{value}</p>
           </div>
         ))}
       </div>
@@ -51,7 +51,7 @@ export function AnalyticsCards({
             <p className="font-serif text-3xl">Trafic & commandes</p>
             <p className="text-sm text-stone">Conversion {conversionRate}%</p>
           </div>
-          <div className="mt-8 grid h-64 grid-cols-7 items-end gap-4">
+          <div className="mt-8 grid h-56 grid-cols-7 items-end gap-2 sm:h-64 sm:gap-4">
             {traffic.map((point) => (
               <div key={point.day} className="flex h-full flex-col items-center justify-end gap-3">
                 <div className="flex h-full w-full items-end gap-2">

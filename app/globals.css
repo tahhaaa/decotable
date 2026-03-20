@@ -15,6 +15,7 @@ body {
   background-image:
     radial-gradient(circle at top, rgba(196, 164, 132, 0.18), transparent 24%),
     linear-gradient(180deg, rgba(248,244,238,1) 0%, rgba(255,255,255,1) 100%);
+  text-rendering: optimizeLegibility;
 }
 
 .container-shell {
@@ -35,6 +36,10 @@ body {
 
 .fade-up {
   animation: fadeUp 0.8s ease both;
+}
+
+.fade-soft {
+  animation: fadeSoft 0.6s ease both;
 }
 
 .link-luxe {
@@ -66,5 +71,14 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fadeSoft {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
