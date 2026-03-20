@@ -1,0 +1,85 @@
+import { AdminShell } from "@/components/admin/admin-shell";
+import { AnalyticsCards } from "@/components/admin/analytics-cards";
+import { getCategories, getCities, getDashboardSnapshot, getFeaturedProducts, getPromotions } from "@/lib/data/store";
+import { formatMAD } from "@/lib/utils";
+
+export default async function AdminPage() {
+  const [snapshot, products, categories, cities, promotions] = await Promise.all([
+    getDashboardSnapshot(),
+    getFeaturedProducts(),
+    getCategories(),
+    getCities(),
+    getPromotions(),
+  ]);
+
+  return (
+    <AdminShell currentPath="/admin">
+      <div className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.35em] text-stone">Administration</p>
+        <h1 className="section-title">Pilotage Decotable</h1>
+        <p className="section-copy">
+          Revenus, trafic, stock, promotions et commandes dans un panneau simple a naviguer sur mobile et desktop.
+        </p>
+      </div>
+      <AnalyticsCards
+        revenue={snapshot.revenue}
+        visits={snapshot.visits}
+        stock={snapshot.stock}
+        averageBasket={snapshot.averageBasket}
+        conversionRate={snapshot.conversionRate}
+        traffic={snapshot.traffic}
+      />
+      <div className="grid gap-6 md:grid-cols-4">
+        {[
+          ["Produits actifs", String(products.length)],
+          ["Categories", String(categories.length)],
+          ["Villes couvertes", String(cities.length)],
+          ["Top produit", snapshot.topProduct],
+        ].map(([label, value]) => (
+          <div key={label} className="surface p-6">
+            <p className="text-sm text-stone">{label}</p>
+            <p className="mt-3 font-serif text-3xl">{value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="surface p-6">
+          <p className="font-serif text-3xl">Commandes recentes</p>
+          <div className="mt-5 space-y-4">
+            {snapshot.orders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between border-b border-black/5 pb-4 text-sm">
+                <div>
+                  <p className="font-medium">{order.id}</p>
+                  <p className="text-stone">{order.user_email}</p>
+                </div>
+                <div className="text-right">
+                  <p className="capitalize">{order.status}</p>
+                  <p className="text-stone">{formatMAD(order.total)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="surface p-6">
+          <div className="flex items-center justify-between">
+            <p className="font-serif text-3xl">Promotions actives</p>
+            <p className="text-sm text-stone">Revenu total {formatMAD(snapshot.revenue)}</p>
+          </div>
+          <div className="mt-5 space-y-4">
+            {promotions.map((promotion) => (
+              <div key={promotion.id} className="rounded-[1.5rem] border border-black/10 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">{promotion.label}</p>
+                  <p className="text-sm uppercase tracking-[0.25em] text-stone">{promotion.code}</p>
+                </div>
+                <p className="mt-2 text-sm text-stone">
+                  {promotion.type === "percentage" ? `${promotion.value}%` : formatMAD(promotion.value)} de reduction
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}

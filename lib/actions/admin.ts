@@ -1,0 +1,142 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
+
+async function getAdminClient() {
+  const supabase = createServiceRoleClient();
+  if (!supabase) {
+    return null;
+  }
+  return supabase;
+}
+
+export async function upsertCategoryAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const name = String(formData.get("name") || "");
+  const description = String(formData.get("description") || "");
+  const image = String(formData.get("image") || "");
+
+  const { error } = await supabase.from("categories").insert({
+    name,
+    slug: slugify(name),
+    description,
+    image_url: image,
+  });
+
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/shop");
+}
+
+export async function upsertProductAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const name = String(formData.get("name") || "");
+  const description = String(formData.get("description") || "");
+  const shortDescription = String(formData.get("shortDescription") || "");
+  const image = String(formData.get("image") || "");
+  const categoryId = String(formData.get("categoryId") || "");
+  const price = Number(formData.get("price") || 0);
+  const inventory = Number(formData.get("inventory") || 0);
+
+  const { error } = await supabase.from("products").insert({
+    name,
+    slug: slugify(name),
+    description,
+    short_description: shortDescription,
+    category_id: categoryId,
+    price,
+    inventory,
+    images: [image],
+  });
+
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/shop");
+}
+
+export async function updateOrderStatusAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  const status = String(formData.get("status") || "");
+  const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
+export async function updateCityAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  const price = Number(formData.get("price") || 0);
+  const eta = String(formData.get("eta") || "");
+
+  const { error } = await supabase.from("cities").update({ price, estimated_time: eta }).eq("id", id);
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/checkout");
+}
+
+export async function upsertPromotionAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const code = String(formData.get("code") || "");
+  const label = String(formData.get("label") || "");
+  const type = String(formData.get("type") || "percentage");
+  const value = Number(formData.get("value") || 0);
+
+  const { error } = await supabase.from("promotions").insert({
+    code,
+    label,
+    type,
+    value,
+    active: true,
+  });
+
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/checkout");
+}
+
+export async function deleteProductAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) return;
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+}
+
+export async function deleteCategoryAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) return;
+  revalidatePath("/admin/categories");
+  revalidatePath("/shop");
+}
+
+export async function deletePromotionAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  const { error } = await supabase.from("promotions").delete().eq("id", id);
+  if (error) return;
+  revalidatePath("/admin/promotions");
+  revalidatePath("/checkout");
+}
