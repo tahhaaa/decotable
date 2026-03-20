@@ -38,12 +38,12 @@ export default async function AdminOrdersPage() {
               </form>
               {toWhatsAppLink(
                 order.phone,
-                `Bonjour, votre commande Decotable ${order.id} est bien recuee. Nous confirmons sa prise en charge.`,
+                `Bonjour 🌿✨ Votre commande Decotable est bien recuee. ${order.productSummary ? `Produit: ${order.productSummary}. ` : ""}Merci beaucoup 💛 Nous confirmons votre commande et revenons vers vous tres vite 📦`,
               ) ? (
                 <a
                   href={toWhatsAppLink(
                     order.phone,
-                    `Bonjour, votre commande Decotable ${order.id} est bien recuee. Nous confirmons sa prise en charge.`,
+                    `Bonjour 🌿✨ Votre commande Decotable est bien recuee. ${order.productSummary ? `Produit: ${order.productSummary}. ` : ""}Merci beaucoup 💛 Nous confirmons votre commande et revenons vers vous tres vite 📦`,
                   ) || "#"}
                   target="_blank"
                   rel="noreferrer"

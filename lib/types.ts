@@ -75,6 +75,7 @@ export type Order = {
   city: string;
   user_email: string;
   phone?: string | null;
+  productSummary?: string | null;
   items_count: number;
 };
 

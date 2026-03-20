@@ -78,21 +78,40 @@ export async function POST(request: Request) {
       shipping = Number(city.price || 0);
       eta = String(city.estimated_time || "24-48h");
 
-      const { data: order, error: orderError } = await client
+      let orderPayload = {
+        user_id: user?.id ?? null,
+        email: body.email ? String(body.email) : null,
+        phone: String(body.phone || ""),
+        city_id: city.id,
+        address: String(body.address || ""),
+        subtotal,
+        shipping,
+        total: subtotal + shipping,
+        status: "pending",
+      };
+
+      let { data: order, error: orderError } = await client
         .from("orders")
-        .insert({
-          user_id: user?.id ?? null,
-          email: body.email ? String(body.email) : null,
-          phone: String(body.phone || ""),
-          city_id: city.id,
-          address: String(body.address || ""),
-          subtotal,
-          shipping,
-          total: subtotal + shipping,
-          status: "pending",
-        })
+        .insert(orderPayload)
         .select("id")
         .single<{ id: string }>();
+
+      if (
+        orderError &&
+        client === sessionClient &&
+        /row-level security policy|policy/i.test(orderError.message)
+      ) {
+        orderPayload = {
+          ...orderPayload,
+          user_id: null,
+        };
+
+        ({ data: order, error: orderError } = await client
+          .from("orders")
+          .insert(orderPayload)
+          .select("id")
+          .single<{ id: string }>());
+      }
 
       if (orderError) {
         lastError = `Erreur commande: ${orderError.message}`;

@@ -88,8 +88,30 @@ async function getCityNameMap() {
   return new Map((data ?? []).map((city) => [city.id, city.name]));
 }
 
+async function getOrderItemsMap(orderIds: string[]) {
+  if (!orderIds.length) return new Map<string, string[]>();
+
+  const supabase = (await getAdminAwareClient()) ?? createServerSupabaseClient();
+  if (!supabase) return new Map<string, string[]>();
+
+  const { data } = await supabase
+    .from("order_items")
+    .select("order_id,product_name")
+    .in("order_id", orderIds);
+
+  const itemsMap = new Map<string, string[]>();
+  for (const item of data ?? []) {
+    const current = itemsMap.get(item.order_id) ?? [];
+    current.push(item.product_name);
+    itemsMap.set(item.order_id, current);
+  }
+
+  return itemsMap;
+}
+
 async function mapOrdersWithCities(rows: OrderRow[]) {
   const cityMap = await getCityNameMap();
+  const itemsMap = await getOrderItemsMap(rows.map((order) => order.id));
 
   return rows.map((order) => ({
     id: order.id,
@@ -99,6 +121,7 @@ async function mapOrdersWithCities(rows: OrderRow[]) {
     city: order.city_id ? cityMap.get(order.city_id) ?? "N/A" : "N/A",
     user_email: order.email || order.phone || "Sans email",
     phone: order.phone ?? null,
+    productSummary: itemsMap.get(order.id)?.slice(0, 2).join(", ") ?? null,
     items_count: 0,
   }));
 }
@@ -384,7 +407,7 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}, option
     averageBasket: 890,
     conversionRate: 5.7,
     topProduct: topProduct?.name ?? "Service Atlas 16 pieces",
-    orders: dashboardOrders.map((order) => ({ ...order, phone: null })),
+    orders: dashboardOrders.map((order) => ({ ...order, phone: null, productSummary: null })),
     traffic: trafficSeries,
     source: "mock" as const,
   };
