@@ -1,6 +1,6 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
-import { updateCityAction } from "@/lib/actions/admin";
+import { applyDefaultCityPricingAction, updateCityAction } from "@/lib/actions/admin";
 import { getCities } from "@/lib/data/store";
 
 export default async function AdminCitiesPage() {
@@ -13,6 +13,11 @@ export default async function AdminCitiesPage() {
           <p className="text-xs uppercase tracking-[0.35em] text-stone">Livraison</p>
           <h1 className="section-title">Tarifs par ville</h1>
         </div>
+        <form action={applyDefaultCityPricingAction}>
+          <Button type="submit" variant="ghost">
+            Appliquer Rabat 20 DH et toutes les autres villes 30 DH
+          </Button>
+        </form>
         <div className="grid gap-4">
           {cities.map((city) => (
             <form key={city.id} action={updateCityAction} className="surface grid gap-4 p-6 md:grid-cols-[1fr_180px_180px_160px] md:items-center">

@@ -122,7 +122,7 @@ export async function getCities(): Promise<City[]> {
   const supabase = createServiceRoleClient();
   if (supabase) {
     const { data } = await supabase.from("cities").select("id,name,price,estimated_time").order("name");
-    if (data) {
+    if (data && data.length > 0) {
       return data.map((row) => ({
         id: row.id,
         name: row.name,

@@ -101,6 +101,22 @@ export async function updateCityAction(formData: FormData): Promise<void> {
   revalidatePath("/checkout");
 }
 
+export async function applyDefaultCityPricingAction(): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const { data: cities } = await supabase.from("cities").select("id,name");
+  if (!cities?.length) return;
+
+  for (const city of cities) {
+    const price = city.name.toLowerCase() === "rabat" ? 20 : 30;
+    await supabase.from("cities").update({ price }).eq("id", city.id);
+  }
+
+  revalidatePath("/admin/cities");
+  revalidatePath("/checkout");
+}
+
 export async function upsertPromotionAction(formData: FormData): Promise<void> {
   const supabase = await getAdminClient();
   if (!supabase) return;

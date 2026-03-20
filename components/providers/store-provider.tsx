@@ -9,6 +9,7 @@ type StoreContextValue = {
   addToCart: (productId: string, quantity?: number) => void;
   updateCartItem: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
+  clearCart: () => void;
   toggleWishlist: (productId: string) => void;
   cartCount: number;
   getCartProductQuantity: (productId: string) => number;
@@ -64,6 +65,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       },
       removeFromCart(productId) {
         setCart((current) => current.filter((item) => item.productId !== productId));
+      },
+      clearCart() {
+        setCart([]);
       },
       toggleWishlist(productId) {
         setWishlist((current) =>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 
 export function AuthCard({ mode }: { mode: "login" | "register" | "reset" }) {
   const [message, setMessage] = useState("");
+  const router = useRouter();
 
   async function submit(formData: FormData) {
     const email = String(formData.get("email") || "");
@@ -39,8 +41,22 @@ export function AuthCard({ mode }: { mode: "login" | "register" | "reset" }) {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setMessage(error?.message ?? "Connexion reussie.");
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    const userId = data.user?.id;
+    if (userId) {
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+      const destination = profile?.role === "admin" ? "/admin" : "/dashboard";
+      router.push(destination);
+      router.refresh();
+      return;
+    }
+
+    setMessage("Connexion reussie.");
   }
 
   const title = {
