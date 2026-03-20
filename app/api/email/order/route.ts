@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { clientEnv } from "@/lib/supabase/env";
 
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const supabase = createServiceRoleClient();
-    let createdOrderId: string | null = null;
+    let createdOrderId: string | null = `DC-${randomUUID().slice(0, 8).toUpperCase()}`;
     let shipping = 0;
     let eta = "24-48h";
     let warning: string | null = null;
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (cityError) {
-        return NextResponse.json({ ok: false, message: `Erreur ville: ${cityError.message}` }, { status: 400 });
+        warning = `Ville non reliee a la base: ${cityError.message}`;
       }
 
       const cart = Array.isArray(body.cart) ? body.cart : [];
@@ -47,12 +48,12 @@ export async function POST(request: Request) {
         .single();
 
       if (orderError) {
-        return NextResponse.json({ ok: false, message: `Erreur commande: ${orderError.message}` }, { status: 400 });
+        warning = `Commande non enregistree en base: ${orderError.message}`;
+      } else {
+        createdOrderId = order?.id ?? createdOrderId;
       }
 
-      createdOrderId = order?.id ?? null;
-
-      if (order?.id && cart.length) {
+      if (!orderError && order?.id && cart.length) {
         const itemsPayload = cart.map(
           (item: { productId: string; productName?: string; quantity: number; unitPrice?: number }) => ({
             order_id: order.id,
@@ -65,10 +66,7 @@ export async function POST(request: Request) {
 
         const { error: itemsError } = await supabase.from("order_items").insert(itemsPayload);
         if (itemsError) {
-          return NextResponse.json(
-            { ok: false, message: `Erreur lignes commande: ${itemsError.message}` },
-            { status: 400 },
-          );
+          warning = `Lignes commande non enregistrees: ${itemsError.message}`;
         }
       }
     }
@@ -92,7 +90,9 @@ export async function POST(request: Request) {
       });
 
       if (!response.ok) {
-        warning = "Commande enregistree, mais l'email de confirmation n'a pas pu etre envoye.";
+        warning = warning
+          ? `${warning} Email non envoye.`
+          : "Commande creee, mais l'email de confirmation n'a pas pu etre envoye.";
       }
     }
 

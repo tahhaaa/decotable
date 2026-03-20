@@ -22,7 +22,7 @@ type CheckoutValues = {
 
 export function CheckoutForm({ products, cities }: { products: Product[]; cities: City[] }) {
   const { cart, clearCart } = useStore();
-  const [submitted, setSubmitted] = useState<null | { orderId?: string; status: string; eta: string }>(null);
+  const [submitted, setSubmitted] = useState<null | { orderId?: string; status: string; eta: string; warning?: string | null }>(null);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const form = useForm<CheckoutValues>();
@@ -89,6 +89,7 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
                 orderId: result.orderId,
                 status: result.status || "pending",
                 eta: result.eta || selectedCity?.eta || "24-48h",
+                warning: result.warning || null,
               });
               clearCart();
             } catch {
@@ -136,6 +137,11 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
                 <p className="mt-3 text-sm font-medium text-ink">Reference: {submitted.orderId}</p>
               ) : null}
               <p className="mt-2 text-sm text-stone">Livraison estimee: {submitted.eta}</p>
+              {submitted.warning ? (
+                <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  {submitted.warning}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-4">
