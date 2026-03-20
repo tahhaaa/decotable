@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useStore } from "@/components/providers/store-provider";
 import { City, Product } from "@/lib/types";
-import { formatMAD } from "@/lib/utils";
+import { formatMAD, shortOrderReference } from "@/lib/utils";
 
 type CheckoutValues = {
   fullName: string;
@@ -58,7 +58,7 @@ export function CheckoutForm({ products, cities }: { products: Product[]; cities
             Votre commande a bien ete recue par Decotable.
           </p>
           {submitted.orderId ? (
-            <p className="mt-3 text-sm font-medium text-ink">Reference: {submitted.orderId}</p>
+            <p className="mt-3 text-sm font-medium text-ink">Reference: {shortOrderReference(submitted.orderId)}</p>
           ) : null}
           <p className="mt-2 text-sm text-stone">Livraison estimee: {submitted.eta}</p>
           {submitted.warning ? (

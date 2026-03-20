@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendPushNotification } from "@/lib/push";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 function isUuid(value: string) {
@@ -144,17 +145,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: lastError }, { status: 500 });
     }
 
-    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/push/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: "Nouvelle commande Decotable",
-        body: `${body.fullName || body.phone} vient de passer une commande.`,
-        url: "/admin/orders",
-      }),
-    }).catch(() => undefined);
+    const pushResult = await sendPushNotification({
+      title: "Nouvelle commande Decotable",
+      body: `${body.fullName || body.phone} a passe une nouvelle commande.`,
+      url: "/admin/orders",
+    });
+
+    if (!pushResult.ok && !warning) {
+      warning = "Commande creee, mais la notification admin n'a pas pu etre envoyee.";
+    }
 
     return NextResponse.json({
       ok: true,

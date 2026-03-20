@@ -47,3 +47,9 @@ export function toWhatsAppLink(phone?: string | null, text?: string) {
   const message = text ? `?text=${encodeURIComponent(text)}` : "";
   return `https://wa.me/${normalized}${message}`;
 }
+
+export function shortOrderReference(value?: string | null) {
+  if (!value) return "";
+  const compact = value.replace(/-/g, "");
+  return `#${compact.slice(-8).toUpperCase()}`;
+}
