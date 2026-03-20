@@ -14,6 +14,7 @@ export type Product = {
   shortDescription: string;
   description: string;
   price: number;
+  purchasePrice?: number | null;
   compareAtPrice?: number | null;
   rating: number;
   reviewCount: number;
@@ -83,4 +84,12 @@ export type TrafficPoint = {
   visits: number;
   orders: number;
   revenue: number;
+};
+
+export type Expense = {
+  id: string;
+  label: string;
+  amount: number;
+  expenseDate: string;
+  notes?: string | null;
 };

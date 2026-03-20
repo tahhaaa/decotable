@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { ImageUpload } from "@/components/admin/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { deleteCategoryAction, upsertCategoryAction } from "@/lib/actions/admin";
@@ -16,7 +17,7 @@ export default async function AdminCategoriesPage() {
         </div>
         <form action={upsertCategoryAction} className="surface grid gap-4 p-6 md:grid-cols-2">
           <Input name="name" placeholder="Nom de la categorie" required />
-          <Input name="image" placeholder="URL image" required />
+          <ImageUpload inputName="image" folder="categories" />
           <textarea
             name="description"
             placeholder="Description"

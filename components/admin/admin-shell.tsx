@@ -7,6 +7,7 @@ const links = [
   ["Categories", "/admin/categories"],
   ["Commandes", "/admin/orders"],
   ["Clients", "/admin/customers"],
+  ["Charges", "/admin/expenses"],
   ["Livraison", "/admin/cities"],
   ["Promotions", "/admin/promotions"],
 ];

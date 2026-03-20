@@ -42,6 +42,7 @@ export async function upsertProductAction(formData: FormData): Promise<void> {
   const image = String(formData.get("image") || "");
   const categoryId = String(formData.get("categoryId") || "");
   const price = Number(formData.get("price") || 0);
+  const purchasePrice = Number(formData.get("purchasePrice") || 0);
   const inventory = Number(formData.get("inventory") || 0);
 
   const { error } = await supabase.from("products").insert({
@@ -51,6 +52,7 @@ export async function upsertProductAction(formData: FormData): Promise<void> {
     short_description: shortDescription,
     category_id: categoryId,
     price,
+    purchase_price: purchasePrice,
     inventory,
     images: [image],
   });
@@ -176,6 +178,39 @@ export async function resetSiteDataAction(): Promise<void> {
   await supabase.from("wishlist").delete().neq("id", "");
   await supabase.from("carts").delete().neq("user_id", "");
   await supabase.from("page_views").delete().neq("id", "");
+  await supabase.from("expenses").delete().neq("id", "");
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+}
+
+export async function upsertExpenseAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const label = String(formData.get("label") || "");
+  const amount = Number(formData.get("amount") || 0);
+  const expenseDate = String(formData.get("expenseDate") || "");
+  const notes = String(formData.get("notes") || "");
+
+  const { error } = await supabase.from("expenses").insert({
+    label,
+    amount,
+    expense_date: expenseDate,
+    notes,
+  });
+
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/admin/expenses");
+}
+
+export async function deleteExpenseAction(formData: FormData): Promise<void> {
+  const supabase = await getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") || "");
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
+  if (error) return;
+  revalidatePath("/admin");
+  revalidatePath("/admin/expenses");
 }

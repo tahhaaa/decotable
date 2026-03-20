@@ -19,9 +19,10 @@ export default async function AdminProductsPage() {
         <form action={upsertProductAction} className="surface grid gap-4 p-6 md:grid-cols-2">
           <Input name="name" placeholder="Nom du produit" required />
           <Input name="price" type="number" placeholder="Prix MAD" required />
+          <Input name="purchasePrice" type="number" placeholder="Prix achat MAD" required />
           <Input name="shortDescription" placeholder="Description courte" required />
           <Input name="inventory" type="number" placeholder="Stock" required />
-          <ImageUpload />
+          <ImageUpload folder="products" />
           <select name="categoryId" className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm" required>
             <option value="">Categorie</option>
             {categories.map((category) => (
@@ -46,7 +47,8 @@ export default async function AdminProductsPage() {
               <tr>
                 <th className="px-6 py-4">Produit</th>
                 <th className="px-6 py-4">Categorie</th>
-                <th className="px-6 py-4">Prix</th>
+                <th className="px-6 py-4">Vente</th>
+                <th className="px-6 py-4">Achat</th>
                 <th className="px-6 py-4">Stock</th>
                 <th className="px-6 py-4">Action</th>
               </tr>
@@ -57,6 +59,7 @@ export default async function AdminProductsPage() {
                   <td className="px-6 py-4">{product.name}</td>
                   <td className="px-6 py-4">{product.categoryName}</td>
                   <td className="px-6 py-4">{formatMAD(product.price)}</td>
+                  <td className="px-6 py-4">{formatMAD(product.purchasePrice ?? 0)}</td>
                   <td className="px-6 py-4">{product.inventory}</td>
                   <td className="px-6 py-4">
                     <form action={deleteProductAction}>
@@ -70,7 +73,7 @@ export default async function AdminProductsPage() {
               ))}
               {!products.length ? (
                 <tr>
-                  <td className="px-6 py-8 text-stone" colSpan={5}>
+                  <td className="px-6 py-8 text-stone" colSpan={6}>
                     Aucun produit en base actuellement.
                   </td>
                 </tr>

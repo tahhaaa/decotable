@@ -3,6 +3,9 @@ import { formatMAD } from "@/lib/utils";
 
 export function AnalyticsCards({
   revenue,
+  expenses,
+  grossProfit,
+  netProfit,
   visits,
   stock,
   averageBasket,
@@ -10,6 +13,9 @@ export function AnalyticsCards({
   traffic,
 }: {
   revenue: number;
+  expenses: number;
+  grossProfit: number;
+  netProfit: number;
   visits: number;
   stock: number;
   averageBasket: number;
@@ -25,6 +31,9 @@ export function AnalyticsCards({
       <div className="grid gap-6 md:grid-cols-4">
         {[
           ["Revenu", formatMAD(revenue)],
+          ["Charges", formatMAD(expenses)],
+          ["Marge brute", formatMAD(grossProfit)],
+          ["Resultat net", formatMAD(netProfit)],
           ["Trafic 7 jours", `${visits} visites`],
           ["Stock total", `${stock} pieces`],
           ["Panier moyen", formatMAD(averageBasket)],

@@ -1,7 +1,7 @@
-import { cities, dashboardOrders, productReviews, products, promotions, trafficSeries } from "@/lib/data/mock-data";
+import { cities, dashboardOrders, expensesSeed, productReviews, products, promotions, trafficSeries } from "@/lib/data/mock-data";
 import { categories } from "@/lib/data/mock-data";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { Category, City, Product, Promotion, Review } from "@/lib/types";
+import { Category, City, Expense, Product, Promotion, Review } from "@/lib/types";
 
 type SnapshotFilters = {
   dateFrom?: string;
@@ -31,6 +31,7 @@ function mapProduct(row: {
   short_description: string;
   description: string;
   price: number;
+  purchase_price?: number | null;
   compare_at_price?: number | null;
   inventory: number;
   featured?: boolean;
@@ -48,6 +49,7 @@ function mapProduct(row: {
     shortDescription: row.short_description,
     description: row.description,
     price: Number(row.price),
+    purchasePrice: row.purchase_price ? Number(row.purchase_price) : null,
     compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : null,
     rating: 0,
     reviewCount: 0,
@@ -84,7 +86,7 @@ export async function getProducts(query?: {
   if (supabase) {
     let request = supabase
       .from("products")
-      .select("id,name,slug,short_description,description,price,compare_at_price,inventory,featured,tags,images,materials,dimensions,categories(id,name)")
+      .select("id,name,slug,short_description,description,price,purchase_price,compare_at_price,inventory,featured,tags,images,materials,dimensions,categories(id,name)")
       .order("created_at", { ascending: false });
 
     if (query?.category) request = request.eq("category_id", query.category);
@@ -108,7 +110,7 @@ export async function getProductBySlug(slug: string) {
   if (supabase) {
     const { data } = await supabase
       .from("products")
-      .select("id,name,slug,short_description,description,price,compare_at_price,inventory,featured,tags,images,materials,dimensions,categories(id,name)")
+      .select("id,name,slug,short_description,description,price,purchase_price,compare_at_price,inventory,featured,tags,images,materials,dimensions,categories(id,name)")
       .eq("slug", slug)
       .maybeSingle();
     if (data) return mapProduct(data);
@@ -148,6 +150,26 @@ export async function getPromotions(): Promise<Promotion[]> {
     }
   }
   return promotions.filter((promotion) => promotion.active);
+}
+
+export async function getExpenses(filters: SnapshotFilters = {}): Promise<Expense[]> {
+  const supabase = createServiceRoleClient();
+  if (supabase) {
+    let query = supabase.from("expenses").select("id,label,amount,expense_date,notes").order("expense_date", { ascending: false });
+    if (filters.dateFrom) query = query.gte("expense_date", filters.dateFrom);
+    if (filters.dateTo) query = query.lte("expense_date", filters.dateTo);
+    const { data } = await query;
+    if (data) {
+      return data.map((row) => ({
+        id: row.id,
+        label: row.label,
+        amount: Number(row.amount),
+        expenseDate: row.expense_date,
+        notes: row.notes,
+      }));
+    }
+  }
+  return expensesSeed;
 }
 
 export async function getReviews(productId: string): Promise<Review[]> {
@@ -191,15 +213,24 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
       viewsQuery = viewsQuery.lte("created_at", `${filters.dateTo}T23:59:59.999Z`);
     }
 
-    const [{ data: ordersData }, { data: productsData }, { data: customersData }, { data: viewsData }] =
+    const [{ data: ordersData }, { data: productsData }, { data: customersData }, { data: viewsData }, { data: expensesData }] =
       await Promise.all([
         ordersQuery,
-        supabase.from("products").select("id,name,inventory"),
+        supabase.from("products").select("id,name,inventory,purchase_price"),
         supabase.from("profiles").select("id"),
         viewsQuery,
+        (() => {
+          let query = supabase.from("expenses").select("id,amount,expense_date");
+          if (filters.dateFrom) query = query.gte("expense_date", filters.dateFrom);
+          if (filters.dateTo) query = query.lte("expense_date", filters.dateTo);
+          return query;
+        })(),
       ]);
 
     const revenue = (ordersData ?? []).reduce((sum, order) => sum + Number(order.total), 0);
+    const expenses = (expensesData ?? []).reduce((sum, expense) => sum + Number(expense.amount), 0);
+    const grossProfit = revenue - ((productsData ?? []).reduce((sum, product) => sum + Number(product.purchase_price ?? 0), 0));
+    const netProfit = grossProfit - expenses;
     const monthlyOrders = ordersData?.length ?? 0;
     const customers = customersData?.length ?? 0;
     const visits = viewsData?.length ?? 0;
@@ -239,6 +270,9 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
 
     return {
       revenue,
+      expenses,
+      grossProfit,
+      netProfit,
       monthlyOrders,
       customers,
       visits,
@@ -262,9 +296,13 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
 
   const totalStock = products.reduce((sum, product) => sum + product.inventory, 0);
   const topProduct = products.slice().sort((a, b) => b.reviewCount - a.reviewCount)[0];
+  const expenses = expensesSeed.reduce((sum, item) => sum + item.amount, 0);
 
   return {
     revenue: 18640,
+    expenses,
+    grossProfit: 10400,
+    netProfit: 10400 - expenses,
     monthlyOrders: 86,
     customers: 241,
     visits: trafficSeries.reduce((sum, point) => sum + point.visits, 0),

@@ -4,7 +4,7 @@ import { ReportFilters } from "@/components/admin/report-filters";
 import { PushOptIn } from "@/components/forms/push-optin";
 import { Button } from "@/components/ui/button";
 import { resetSiteDataAction } from "@/lib/actions/admin";
-import { getCategories, getCities, getDashboardSnapshot, getFeaturedProducts, getPromotions } from "@/lib/data/store";
+import { getCategories, getCities, getDashboardSnapshot, getProducts, getPromotions } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function AdminPage({
@@ -17,7 +17,7 @@ export default async function AdminPage({
       dateFrom: searchParams.dateFrom,
       dateTo: searchParams.dateTo,
     }),
-    getFeaturedProducts(),
+    getProducts(),
     getCategories(),
     getCities(),
     getPromotions(),
@@ -45,6 +45,9 @@ export default async function AdminPage({
       </form>
       <AnalyticsCards
         revenue={snapshot.revenue}
+        expenses={snapshot.expenses}
+        grossProfit={snapshot.grossProfit}
+        netProfit={snapshot.netProfit}
         visits={snapshot.visits}
         stock={snapshot.stock}
         averageBasket={snapshot.averageBasket}

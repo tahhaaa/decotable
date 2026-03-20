@@ -39,6 +39,7 @@ export const products: Product[] = [
     description:
       "Ce service en gres emaille accompagne les tables du quotidien comme les grandes occasions. Sa teinte sablee s'accorde naturellement aux intérieurs epures.",
     price: 1290,
+    purchasePrice: 760,
     compareAtPrice: 1490,
     rating: 4.8,
     reviewCount: 28,
@@ -63,6 +64,7 @@ export const products: Product[] = [
     description:
       "Faconne pour sublimer branches seches ou compositions florales, le vase Dune structure un espace avec elegance sans le surcharger.",
     price: 540,
+    purchasePrice: 280,
     rating: 4.7,
     reviewCount: 14,
     categoryId: "cat-deco",
@@ -85,6 +87,7 @@ export const products: Product[] = [
     description:
       "Le coffret Nacre a ete pense pour les listes de mariage et les cadeaux de maison. Une selection chic, utile et facile a offrir partout au Maroc.",
     price: 890,
+    purchasePrice: 510,
     rating: 4.9,
     reviewCount: 33,
     categoryId: "cat-gifts",
@@ -107,6 +110,7 @@ export const products: Product[] = [
     description:
       "Leur silhouette cisele apporte une dimension decor active a la table. Ideals avec une vaisselle neutre ou des nappes en lin texturé.",
     price: 420,
+    purchasePrice: 190,
     rating: 4.6,
     reviewCount: 19,
     categoryId: "cat-tableware",
@@ -224,4 +228,21 @@ export const trafficSeries = [
   { day: "Ven", visits: 360, orders: 21, revenue: 9600 },
   { day: "Sam", visits: 420, orders: 24, revenue: 11200 },
   { day: "Dim", visits: 310, orders: 17, revenue: 7800 },
+];
+
+export const expensesSeed = [
+  {
+    id: "expense-1",
+    label: "Publicite Instagram",
+    amount: 1200,
+    expenseDate: "2026-03-18",
+    notes: "Campagne Ramadan",
+  },
+  {
+    id: "expense-2",
+    label: "Packaging",
+    amount: 650,
+    expenseDate: "2026-03-17",
+    notes: "Boites et protections",
+  },
 ];

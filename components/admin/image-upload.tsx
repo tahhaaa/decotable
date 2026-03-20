@@ -2,9 +2,14 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 
-export function ImageUpload({ inputName = "image" }: { inputName?: string }) {
+export function ImageUpload({
+  inputName = "image",
+  folder = "products",
+}: {
+  inputName?: string;
+  folder?: string;
+}) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState("");
   const [message, setMessage] = useState("");
@@ -30,31 +35,26 @@ export function ImageUpload({ inputName = "image" }: { inputName?: string }) {
           onClick={() =>
             startTransition(async () => {
               const file = fileRef.current?.files?.[0];
-              const supabase = createClient();
 
               if (!file) {
                 setMessage("Choisissez une image d'abord.");
                 return;
               }
-
-              if (!supabase) {
-                setMessage("Supabase n'est pas configure.");
-                return;
-              }
-
-              const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-              const { error } = await supabase.storage.from("product-images").upload(fileName, file, {
-                cacheControl: "3600",
-                upsert: true,
+              const payload = new FormData();
+              payload.set("file", file);
+              payload.set("folder", folder);
+              const response = await fetch("/api/admin/upload", {
+                method: "POST",
+                body: payload,
               });
+              const result = await response.json();
 
-              if (error) {
-                setMessage(error.message);
+              if (!response.ok || !result.ok) {
+                setMessage(result.message || "Upload impossible.");
                 return;
               }
 
-              const { data } = supabase.storage.from("product-images").getPublicUrl(fileName);
-              setUrl(data.publicUrl);
+              setUrl(result.url);
               setMessage("Image uploadee avec succes.");
             })
           }
