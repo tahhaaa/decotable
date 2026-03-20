@@ -9,6 +9,10 @@ type SnapshotFilters = {
   dateTo?: string;
 };
 
+type FetchOptions = {
+  fallbackToMock?: boolean;
+};
+
 function mapCategory(row: {
   id: string;
   name: string;
@@ -65,13 +69,13 @@ function mapProduct(row: {
   };
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(options: FetchOptions = { fallbackToMock: true }): Promise<Category[]> {
   const supabase = createServiceRoleClient();
   if (supabase) {
     const { data } = await supabase.from("categories").select("id,name,slug,description,image_url").order("created_at", { ascending: false });
     if (data) return data.map(mapCategory);
   }
-  return categories;
+  return options.fallbackToMock ? categories : [];
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
@@ -82,7 +86,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 export async function getProducts(query?: {
   search?: string;
   category?: string;
-}): Promise<Product[]> {
+}, options: FetchOptions = { fallbackToMock: true }): Promise<Product[]> {
   const supabase = createServiceRoleClient();
   if (supabase) {
     let request = supabase
@@ -96,6 +100,8 @@ export async function getProducts(query?: {
     const { data } = await request;
     if (data) return data.map((row) => mapProduct(row));
   }
+
+  if (!options.fallbackToMock) return [];
 
   return products.filter((product) => {
     const matchesSearch = query?.search
@@ -119,7 +125,7 @@ export async function getProductBySlug(slug: string) {
   return products.find((product) => product.slug === slug) ?? null;
 }
 
-export async function getCities(): Promise<City[]> {
+export async function getCities(options: FetchOptions = { fallbackToMock: true }): Promise<City[]> {
   const supabase = createServiceRoleClient();
   if (supabase) {
     const { data } = await supabase.from("cities").select("id,name,price,estimated_time").order("name");
@@ -132,10 +138,10 @@ export async function getCities(): Promise<City[]> {
       }));
     }
   }
-  return cities;
+  return options.fallbackToMock ? cities : [];
 }
 
-export async function getPromotions(): Promise<Promotion[]> {
+export async function getPromotions(options: FetchOptions = { fallbackToMock: true }): Promise<Promotion[]> {
   const supabase = createServiceRoleClient();
   if (supabase) {
     const { data } = await supabase.from("promotions").select("id,code,label,type,value,active").order("created_at", { ascending: false });
@@ -150,10 +156,10 @@ export async function getPromotions(): Promise<Promotion[]> {
       }));
     }
   }
-  return promotions.filter((promotion) => promotion.active);
+  return options.fallbackToMock ? promotions.filter((promotion) => promotion.active) : [];
 }
 
-export async function getExpenses(filters: SnapshotFilters = {}): Promise<Expense[]> {
+export async function getExpenses(filters: SnapshotFilters = {}, options: FetchOptions = { fallbackToMock: true }): Promise<Expense[]> {
   const supabase = createServiceRoleClient();
   if (supabase) {
     let query = supabase.from("expenses").select("id,label,amount,expense_date,notes").order("expense_date", { ascending: false });
@@ -170,7 +176,7 @@ export async function getExpenses(filters: SnapshotFilters = {}): Promise<Expens
       }));
     }
   }
-  return expensesSeed;
+  return options.fallbackToMock ? expensesSeed : [];
 }
 
 export async function getReviews(productId: string): Promise<Review[]> {
@@ -194,7 +200,7 @@ export async function getReviews(productId: string): Promise<Review[]> {
   return productReviews[productId] ?? [];
 }
 
-export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
+export async function getDashboardSnapshot(filters: SnapshotFilters = {}, options: FetchOptions = { fallbackToMock: true }) {
   const supabase = createServiceRoleClient();
   if (supabase) {
     let ordersQuery = supabase
@@ -292,6 +298,35 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
         items_count: 0,
       })),
       traffic: Array.from(trafficMap.entries()).map(([day, value]) => ({ day, ...value })),
+      source: "live" as const,
+    };
+  }
+
+  if (!options.fallbackToMock) {
+    return {
+      revenue: 0,
+      expenses: 0,
+      grossProfit: 0,
+      netProfit: 0,
+      monthlyOrders: 0,
+      customers: 0,
+      visits: 0,
+      pendingOrders: 0,
+      stock: 0,
+      averageBasket: 0,
+      conversionRate: 0,
+      topProduct: "Aucun produit",
+      orders: [],
+      traffic: [
+        { day: "Lun", visits: 0, orders: 0, revenue: 0 },
+        { day: "Mar", visits: 0, orders: 0, revenue: 0 },
+        { day: "Mer", visits: 0, orders: 0, revenue: 0 },
+        { day: "Jeu", visits: 0, orders: 0, revenue: 0 },
+        { day: "Ven", visits: 0, orders: 0, revenue: 0 },
+        { day: "Sam", visits: 0, orders: 0, revenue: 0 },
+        { day: "Dim", visits: 0, orders: 0, revenue: 0 },
+      ],
+      source: "empty" as const,
     };
   }
 
@@ -314,6 +349,7 @@ export async function getDashboardSnapshot(filters: SnapshotFilters = {}) {
     topProduct: topProduct?.name ?? "Service Atlas 16 pieces",
     orders: dashboardOrders,
     traffic: trafficSeries,
+    source: "mock" as const,
   };
 }
 

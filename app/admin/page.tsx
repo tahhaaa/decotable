@@ -16,11 +16,11 @@ export default async function AdminPage({
     getDashboardSnapshot({
       dateFrom: searchParams.dateFrom,
       dateTo: searchParams.dateTo,
-    }),
-    getProducts(),
-    getCategories(),
-    getCities(),
-    getPromotions(),
+    }, { fallbackToMock: false }),
+    getProducts(undefined, { fallbackToMock: false }),
+    getCategories({ fallbackToMock: false }),
+    getCities({ fallbackToMock: false }),
+    getPromotions({ fallbackToMock: false }),
   ]);
 
   return (
@@ -43,6 +43,11 @@ export default async function AdminPage({
       <form>
         <ReportFilters dateFrom={searchParams.dateFrom} dateTo={searchParams.dateTo} />
       </form>
+      {snapshot.source !== "live" ? (
+        <div className="surface border border-amber-300/60 bg-amber-50 p-4 text-sm text-stone">
+          L&apos;admin affiche uniquement les donnees reelles. Si tout est a zero, verifiez les variables Vercel Supabase et les migrations de base.
+        </div>
+      ) : null}
       <AnalyticsCards
         revenue={snapshot.revenue}
         expenses={snapshot.expenses}

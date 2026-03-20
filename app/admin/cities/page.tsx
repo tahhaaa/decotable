@@ -4,7 +4,7 @@ import { applyDefaultCityPricingAction, updateCityAction } from "@/lib/actions/a
 import { getCities } from "@/lib/data/store";
 
 export default async function AdminCitiesPage() {
-  const cities = await getCities();
+  const cities = await getCities({ fallbackToMock: false });
 
   return (
     <AdminShell currentPath="/admin/cities">
@@ -37,6 +37,11 @@ export default async function AdminCitiesPage() {
               <Button type="submit">Mettre a jour</Button>
             </form>
           ))}
+          {!cities.length ? (
+            <div className="surface p-6 text-sm text-stone">
+              Aucune ville chargee en base. Ajoutez vos villes du Maroc dans Supabase pour activer la livraison live.
+            </div>
+          ) : null}
         </div>
       </div>
     </AdminShell>

@@ -6,7 +6,7 @@ import { getExpenses } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function AdminExpensesPage() {
-  const expenses = await getExpenses();
+  const expenses = await getExpenses({}, { fallbackToMock: false });
 
   return (
     <AdminShell currentPath="/admin/expenses">

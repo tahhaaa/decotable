@@ -5,7 +5,7 @@ import { getDashboardSnapshot } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function AdminOrdersPage() {
-  const snapshot = await getDashboardSnapshot({});
+  const snapshot = await getDashboardSnapshot({}, { fallbackToMock: false });
 
   return (
     <AdminShell currentPath="/admin/orders">

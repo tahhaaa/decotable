@@ -6,7 +6,7 @@ import { deleteCategoryAction, upsertCategoryAction } from "@/lib/actions/admin"
 import { getCategories } from "@/lib/data/store";
 
 export default async function AdminCategoriesPage() {
-  const categories = await getCategories();
+  const categories = await getCategories({ fallbackToMock: false });
 
   return (
     <AdminShell currentPath="/admin/categories">
@@ -41,6 +41,9 @@ export default async function AdminCategoriesPage() {
               </form>
             </div>
           ))}
+          {!categories.length ? (
+            <div className="surface p-6 text-sm text-stone">Aucune categorie en base actuellement.</div>
+          ) : null}
         </div>
       </div>
     </AdminShell>

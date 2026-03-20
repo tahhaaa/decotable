@@ -6,7 +6,7 @@ import { getPromotions } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function AdminPromotionsPage() {
-  const promotions = await getPromotions();
+  const promotions = await getPromotions({ fallbackToMock: false });
 
   return (
     <AdminShell currentPath="/admin/promotions">
@@ -43,6 +43,9 @@ export default async function AdminPromotionsPage() {
               </form>
             </div>
           ))}
+          {!promotions.length ? (
+            <div className="surface p-6 text-sm text-stone">Aucune promotion active en base.</div>
+          ) : null}
         </div>
       </div>
     </AdminShell>

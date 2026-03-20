@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dateFrom = searchParams.get("dateFrom") || undefined;
   const dateTo = searchParams.get("dateTo") || undefined;
-  const snapshot = await getDashboardSnapshot({ dateFrom, dateTo });
+  const snapshot = await getDashboardSnapshot({ dateFrom, dateTo }, { fallbackToMock: false });
 
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([595, 842]);

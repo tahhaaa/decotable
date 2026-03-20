@@ -7,7 +7,10 @@ import { getCategories, getProducts } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function AdminProductsPage() {
-  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+  const [products, categories] = await Promise.all([
+    getProducts(undefined, { fallbackToMock: false }),
+    getCategories({ fallbackToMock: false }),
+  ]);
 
   return (
     <AdminShell currentPath="/admin/products">
