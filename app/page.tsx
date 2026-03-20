@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2, Truck } from "lucide-react";
 import { ProductCard } from "@/components/shop/product-card";
 import { Button } from "@/components/ui/button";
@@ -14,10 +13,6 @@ export default async function HomePage() {
     getFeaturedProducts(),
     getCategories(),
   ]);
-
-  if (access.role === "admin") {
-    redirect("/admin");
-  }
 
   return (
     <div className="bg-grain">
@@ -44,6 +39,11 @@ export default async function HomePage() {
             <Link href="/contact">
               <Button variant="ghost">Nous contacter</Button>
             </Link>
+            {access.role === "admin" ? (
+              <Link href="/admin">
+                <Button variant="ghost">Ouvrir l&apos;admin</Button>
+              </Link>
+            ) : null}
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
