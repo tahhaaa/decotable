@@ -1,14 +1,22 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AnalyticsCards } from "@/components/admin/analytics-cards";
+import { ReportFilters } from "@/components/admin/report-filters";
 import { PushOptIn } from "@/components/forms/push-optin";
 import { Button } from "@/components/ui/button";
 import { resetSiteDataAction } from "@/lib/actions/admin";
 import { getCategories, getCities, getDashboardSnapshot, getFeaturedProducts, getPromotions } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { dateFrom?: string; dateTo?: string };
+}) {
   const [snapshot, products, categories, cities, promotions] = await Promise.all([
-    getDashboardSnapshot(),
+    getDashboardSnapshot({
+      dateFrom: searchParams.dateFrom,
+      dateTo: searchParams.dateTo,
+    }),
     getFeaturedProducts(),
     getCategories(),
     getCities(),
@@ -32,6 +40,9 @@ export default async function AdminPage() {
           </Button>
         </form>
       </div>
+      <form>
+        <ReportFilters dateFrom={searchParams.dateFrom} dateTo={searchParams.dateTo} />
+      </form>
       <AnalyticsCards
         revenue={snapshot.revenue}
         visits={snapshot.visits}
@@ -69,6 +80,9 @@ export default async function AdminPage() {
                 </div>
               </div>
             ))}
+            {!snapshot.orders.length ? (
+              <p className="text-sm text-stone">Aucune commande sur cette periode.</p>
+            ) : null}
           </div>
         </div>
         <div className="surface p-6">

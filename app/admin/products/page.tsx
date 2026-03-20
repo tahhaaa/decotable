@@ -68,6 +68,13 @@ export default async function AdminProductsPage() {
                   </td>
                 </tr>
               ))}
+              {!products.length ? (
+                <tr>
+                  <td className="px-6 py-8 text-stone" colSpan={5}>
+                    Aucun produit en base actuellement.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>

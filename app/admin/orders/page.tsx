@@ -5,7 +5,7 @@ import { getDashboardSnapshot } from "@/lib/data/store";
 import { formatMAD } from "@/lib/utils";
 
 export default async function AdminOrdersPage() {
-  const snapshot = await getDashboardSnapshot();
+  const snapshot = await getDashboardSnapshot({});
 
   return (
     <AdminShell currentPath="/admin/orders">
@@ -43,6 +43,11 @@ export default async function AdminOrdersPage() {
               </form>
             </div>
           ))}
+          {!snapshot.orders.length ? (
+            <div className="surface p-8 text-sm text-stone">
+              Aucune commande sur la periode selectionnee.
+            </div>
+          ) : null}
         </div>
       </div>
     </AdminShell>
