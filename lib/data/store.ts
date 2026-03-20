@@ -102,15 +102,12 @@ async function mapOrdersWithCities(rows: OrderRow[]) {
 }
 
 async function getAdminAwareClient() {
-  const service = createServiceRoleClient();
-  if (service) return service;
-
   const access = await getCurrentUserRole();
   if (access.role === "admin") {
     return createServerSupabaseClient();
   }
 
-  return null;
+  return createServiceRoleClient();
 }
 
 export async function getCategories(options: FetchOptions = { fallbackToMock: true }): Promise<Category[]> {

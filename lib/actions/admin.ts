@@ -7,15 +7,12 @@ import { getCurrentUserRole } from "@/lib/supabase/auth";
 import { slugify } from "@/lib/utils";
 
 async function getAdminClient() {
-  const supabase = createServiceRoleClient();
-  if (supabase) return supabase;
-
   const access = await getCurrentUserRole();
   if (access.role === "admin") {
     return createServerSupabaseClient();
   }
 
-  return null;
+  return createServiceRoleClient();
 }
 
 export async function upsertCategoryAction(formData: FormData): Promise<void> {
