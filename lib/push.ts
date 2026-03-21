@@ -26,6 +26,10 @@ export async function sendPushNotification(payload: PushPayload) {
     return { ok: false as const, message: error.message };
   }
 
+  if (!data?.length) {
+    return { ok: false as const, message: "Aucun appareil admin n'est abonne aux notifications." };
+  }
+
   const results = await Promise.all(
     (data || []).map(async (entry) => {
       try {
@@ -38,5 +42,9 @@ export async function sendPushNotification(payload: PushPayload) {
   );
 
   const sent = results.filter((item) => item.ok).length;
+  if (!sent) {
+    return { ok: false as const, message: "Les appareils abonnes ont refuse la notification push." };
+  }
+
   return { ok: true as const, sent, total: results.length };
 }

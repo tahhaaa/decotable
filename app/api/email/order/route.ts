@@ -152,7 +152,7 @@ export async function POST(request: Request) {
     });
 
     if (!pushResult.ok && !warning) {
-      warning = "Commande creee, mais la notification admin n'a pas pu etre envoyee.";
+      warning = pushResult.message;
     }
 
     return NextResponse.json({
